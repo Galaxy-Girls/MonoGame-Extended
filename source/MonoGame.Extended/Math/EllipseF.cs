@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Runtime.Serialization;
 using Microsoft.Xna.Framework;
 
@@ -10,6 +12,7 @@ namespace MonoGame.Extended
         [DataMember] public Vector2 Center { get; set; }
         [DataMember] public float RadiusX { get; set; }
         [DataMember] public float RadiusY { get; set; }
+        [DataMember] public float Angle { get; set; }
 
         public Vector2 Position
         {
@@ -22,80 +25,140 @@ namespace MonoGame.Extended
             Center = center;
             RadiusX = radiusX;
             RadiusY = radiusY;
+            Angle = 0f;
         }
 
-        public float Left => Center.X - RadiusX;
-        public float Top => Center.Y - RadiusY;
-        public float Right => Center.X + RadiusX;
-        public float Bottom => Center.Y + RadiusY;
+        public EllipseF(Vector2 center, float radiusX, float radiusY, float angle)
+        {
+            Center = center;
+            RadiusX = radiusX;
+            RadiusY = radiusY;
+            Angle = angle;
+        }
 
+        /// <inheritdoc cref="IShapeF.WithPosition(Vector2)"/>
+        public IShapeF WithPosition(Vector2 newPosition) => this with { Position = newPosition };
+
+        public float Left => BoundingRectangle.Left;
+        public float Top => BoundingRectangle.Top;
+        public float Right => BoundingRectangle.Right;
+        public float Bottom => BoundingRectangle.Bottom;
+
+        [field: AllowNull]
         public RectangleF BoundingRectangle
         {
             get
             {
-                var minX = Left;
-                var minY = Top;
-                var maxX = Right;
-                var maxY = Bottom;
-                return new RectangleF(minX, minY, maxX - minX, maxY - minY);
+                float x = Math.Abs(RadiusX * (float)Math.Cos(Angle)) + Math.Abs(RadiusY * (float)Math.Sin(Angle));
+                float y = Math.Abs(RadiusX * (float)Math.Sin(Angle)) + Math.Abs(RadiusY * (float)Math.Cos(Angle));
+                return new RectangleF(Center.X - x, Center.Y - y, x * 2, y * 2);
             }
         }
 
+        [Pure]
         public bool Contains(float x, float y)
         {
-            float xCalc = (float) (Math.Pow(x - Center.X, 2) / Math.Pow(RadiusX, 2));
-            float yCalc = (float) (Math.Pow(y - Center.Y, 2) / Math.Pow(RadiusY, 2));
-
-            return xCalc + yCalc <= 1;
+            float dx = x - Center.X;
+            float dy = y - Center.Y;
+            float cos = (float)Math.Cos(Angle);
+            float sin = (float)Math.Sin(Angle);
+            float a = (dx * cos + dy * sin) / RadiusX;
+            float b = (dy * cos - dx * sin) / RadiusY;
+            return a * a + b * b <= 1f;
         }
 
-        public bool Contains(Vector2 point)
+        [Pure]
+        public bool Contains(Vector2 point) => Contains(point.X, point.Y);
+
+        [Pure]
+        public Vector2 ClosestPointTo(Vector2 point)
         {
-            return Contains(point.X, point.Y);
+            float dx = point.X - Center.X;
+            float dy = point.Y - Center.Y;
+            float cos = (float)Math.Cos(Angle);
+            float sin = (float)Math.Sin(Angle);
+            float a = (dx * cos + dy * sin) / RadiusX;
+            float b = (dy * cos - dx * sin) / RadiusY;
+            float length = (float)Math.Sqrt(a * a + b * b);
+            if (length == 0f)
+                return Center;
+
+            a /= length;
+            b /= length;
+
+            return new Vector2(Center.X + a * RadiusX, Center.Y + b * RadiusY);
         }
 
-        public bool Equals(EllipseF ellispse)
+        [Pure]
+        public bool Intersects(EllipseF ellipse)
         {
-            return Equals(ref ellispse);
+            var closestPoint = ClosestPointTo(ellipse.Center);
+            return ellipse.Contains(closestPoint);
         }
 
+        [Pure]
+        public float RadiusAtAngle(float angle)
+        {
+            float cos = (float)Math.Cos(angle);
+            float sin = (float)Math.Sin(angle);
+            return (RadiusX * RadiusY) / (float)Math.Sqrt((RadiusY * RadiusY * cos * cos) + (RadiusX * RadiusX * sin * sin));
+        }
+
+        [Pure]
+        public float AngleAtPoint(float x, float y)
+        {
+            float dx = x - Center.X;
+            float dy = y - Center.Y;
+            float cos = (float)Math.Cos(Angle);
+            float sin = (float)Math.Sin(Angle);
+            float a = (dx * cos + dy * sin) / RadiusX;
+            float b = (dy * cos - dx * sin) / RadiusY;
+            return (float)Math.Atan2(b, a);
+        }
+
+        [Pure]
+        public float RadiusAtPoint(float x, float y) => RadiusAtAngle(AngleAtPoint(x, y));
+
+        [Pure]
+        public EllipseF Rotate(float angle) => new(Center, RadiusX, RadiusY, Angle + angle);
+
+        [Pure]
+        public EllipseF Reflect(Vector2 angle) => Reflect(angle.ToAngle());
+
+        [Pure]
+        public EllipseF Reflect(float angle)
+        {
+            Vector2 center = Center;
+            EllipseF rotation = Rotate(-angle);
+            EllipseF conj = rotation.Conjugate;
+            EllipseF result = conj.Rotate(angle);
+            result.Position = center;
+            return result;
+        }
+
+        [Pure]
+        private EllipseF Conjugate => new(Center, -RadiusX, RadiusY);
+
+        public bool Equals(EllipseF ellispse) => Equals(ref ellispse);
+
+        [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
         public bool Equals(ref EllipseF ellispse)
         {
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             return ellispse.Center == Center
                    && ellispse.RadiusX == RadiusX
-                   && ellispse.RadiusY == RadiusY;
+                   && ellispse.RadiusY == RadiusY
+                   && ellispse.Angle == Angle;
         }
 
-        public override bool Equals(object obj)
-        {
-            return obj is EllipseF && Equals((EllipseF)obj);
-        }
+        public override bool Equals(object obj) => (obj is EllipseF ellipse) && Equals(ellipse);
 
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = Center.GetHashCode();
-                hashCode = (hashCode * 397) ^ RadiusX.GetHashCode();
-                hashCode = (hashCode * 397) ^ RadiusY.GetHashCode();
-                return hashCode;
-            }
-        }
+        public override int GetHashCode() => HashCode.Combine(Center, RadiusX, RadiusY, Angle);
 
-        public override string ToString()
-        {
-            return $"Centre: {Center}, RadiusX: {RadiusX}, RadiusY: {RadiusY}";
-        }
+        public override string ToString() => $"Center: {Center}, RadiusX: {RadiusX}, RadiusY: {RadiusY}, Angle: {Angle}";
 
-        public static bool operator ==(EllipseF first, EllipseF second)
-        {
-            return first.Equals(ref second);
-        }
+        public static bool operator ==(EllipseF first, EllipseF second) => first.Equals(ref second);
 
-        public static bool operator !=(EllipseF first, EllipseF second)
-        {
-            return !(first == second);
-        }
+        public static bool operator !=(EllipseF first, EllipseF second) => !(first == second);
     }
 }

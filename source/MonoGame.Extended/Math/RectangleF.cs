@@ -113,9 +113,17 @@ namespace MonoGame.Extended
         }
 
         /// <summary>
-        ///     Gets the <see cref="Vector2" /> representing the center of this <see cref="RectangleF" />.
+        ///     Gets or sets the <see cref="Vector2" /> representing the center of this <see cref="RectangleF" />.
         /// </summary>
-        public Vector2 Center => new Vector2(X + Width * 0.5f, Y + Height * 0.5f);
+        public Vector2 Center
+        {
+            get => new Vector2(X + Width * 0.5f, Y + Height * 0.5f);
+            set
+            {
+                X = value.X - Width * 0.5f;
+                Y = value.Y - Height * 0.5f;
+            }
+        }
 
         /// <summary>
         ///     Gets the <see cref="Vector2" /> representing the top-left of this <see cref="RectangleF" />.
@@ -166,6 +174,9 @@ namespace MonoGame.Extended
             Width = size.Width;
             Height = size.Height;
         }
+
+        /// <inheritdoc cref="IShapeF.WithPosition(Vector2)"/>
+        public IShapeF WithPosition(Vector2 newPosition) => this with { Position = newPosition };
 
         /// <summary>
         ///     Computes the <see cref="RectangleF" /> from a minimum <see cref="Vector2" /> and maximum

@@ -11,15 +11,38 @@ namespace MonoGame.Extended
     /// </remakarks>
     public interface IShapeF
     {
+
         /// <summary>
         /// Gets or sets the position of the shape.
         /// </summary>
         Vector2 Position { get; set; }
 
         /// <summary>
-        /// Gets escribed rectangle, which lying outside the shape
+        /// Gets or sets the position of the shape center.
         /// </summary>
+        Vector2 Center { get; set; }
+
+        /// <summary>
+        /// Gets a rectangle inscribed around the outside the shape.
+        /// </summary>
+        /// <remarks>
+        /// At least 3 points on the shape should be on the returned rectangle.
+        /// </remarks>
         RectangleF BoundingRectangle { get; }
+
+        /// <summary>
+        /// Checks whether a point is within the shape or not.
+        /// </summary>
+        /// <param name="point">The point to test.</param>
+        /// <returns>True if the point is within the bounds of the shape.</returns>
+        bool Contains(Vector2 point);
+
+        /// <summary>
+        /// Returns a new shape with a new position.
+        /// </summary>
+        /// <param name="newPosition">The new position.</param>
+        /// <returns>A copy of the shape with a new position.</returns>
+        IShapeF WithPosition(Vector2 newPosition);
     }
 
     /// <summary>

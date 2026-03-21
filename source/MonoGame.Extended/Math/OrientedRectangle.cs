@@ -19,6 +19,11 @@ namespace MonoGame.Extended
         /// The centre position of this <see cref="OrientedRectangle" />.
         /// </summary>
         public Vector2 Center;
+        Vector2 IShapeF.Center
+        {
+            get => Center;
+            set => Center = value;
+        }
 
         /// <summary>
         /// The distance from the <see cref="Center" /> point along both axes to any point on the boundary of this
@@ -46,6 +51,9 @@ namespace MonoGame.Extended
             Orientation = orientation;
         }
 
+        /// <inheritdoc cref="IShapeF.WithPosition(Vector2)"/>
+        public IShapeF WithPosition(Vector2 newPosition) => this with { Position = newPosition };
+
         /// <summary>
         /// Gets a list of points defining the corner points of the oriented rectangle.
         /// </summary>
@@ -71,7 +79,7 @@ namespace MonoGame.Extended
         public Vector2 Position
         {
             get => Vector2.Transform(-Radii, Orientation) + Center;
-            set => throw new NotImplementedException();
+            set => Center = value - Vector2.Transform(-Radii, Orientation);
         }
 
         public RectangleF BoundingRectangle => (RectangleF)this;
@@ -283,6 +291,67 @@ namespace MonoGame.Extended
             {
                 return Math.Min(p1.Max, p2.Max) - Math.Max(p1.Min, p2.Min);
             }
+        }
+
+        /// <summary>
+        ///     Determines whether the specified <see cref="RectangleF" /> contains the specified
+        ///     <see cref="Point2" />.
+        /// </summary>
+        /// <param name="rectangle">The rectangle.</param>
+        /// <param name="point">The point.</param>
+        /// <returns>
+        ///     <c>true</c> if the <paramref name="rectangle" /> contains the <paramref name="point" />; otherwise,
+        ///     <c>false</c>.
+        /// </returns>
+        public static bool Contains(ref OrientedRectangle rectangle, ref Vector2 point)
+        {
+            // Transform the point into the rectangle's local space and perform an AABB check.
+            // In local space, the oriented rectangle is centered at the origin with extents 'Radii'.
+            Vector2 local = point - rectangle.Center;
+
+            Matrix3x2 orientation = rectangle.Orientation;
+            Matrix matrix = new Matrix(
+                orientation.M11, orientation.M12, 0f, 0f,
+                orientation.M21, orientation.M22, 0f, 0f,
+                0f, 0f, 1f, 0f,
+                0f, 0f, 0f, 1f);
+            Matrix inverse = Matrix.Invert(matrix);
+
+            local = new Vector2(
+                local.X * inverse.M11 + local.Y * inverse.M21,
+                local.X * inverse.M12 + local.Y * inverse.M22);
+
+            return local.X >= -rectangle.Radii.X && local.X <= rectangle.Radii.X
+                && local.Y >= -rectangle.Radii.Y && local.Y <= rectangle.Radii.Y;
+        }
+
+        /// <summary>
+        ///     Determines whether the specified <see cref="RectangleF" /> contains the specified
+        ///     <see cref="Point2" />.
+        /// </summary>
+        /// <param name="rectangle">The rectangle.</param>
+        /// <param name="point">The point.</param>
+        /// <returns>
+        ///     <c>true</c> if the <paramref name="rectangle" /> contains the <paramref name="point" />; otherwise,
+        ///     <c>false</c>.
+        /// </returns>
+        public static bool Contains(OrientedRectangle rectangle, Vector2 point)
+        {
+            return Contains(ref rectangle, ref point);
+        }
+
+        /// <summary>
+        ///     Determines whether this <see cref="RectangleF" /> contains the specified
+        ///     <see cref="Point2" />.
+        /// </summary>
+        /// <param name="point">The point.</param>
+        /// <returns>
+        ///     <c>true</c> if this <see cref="RectangleF"/> contains the <paramref name="point" />; otherwise,
+        ///     <c>false</c>.
+        /// </returns>
+        public bool Contains(Vector2 point)
+        {
+            return Contains(ref this, ref point);
         }
 
         /// <summary>

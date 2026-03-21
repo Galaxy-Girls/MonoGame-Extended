@@ -40,6 +40,11 @@ namespace MonoGame.Extended
             get => Center;
             set => Center = value;
         }
+        Vector2 IShapeF.Center
+        {
+            get => Center;
+            set => Center = value;
+        }
 
         public RectangleF BoundingRectangle
         {
@@ -72,6 +77,9 @@ namespace MonoGame.Extended
             Center = center;
             Radius = radius;
         }
+
+        /// <inheritdoc cref="IShapeF.WithPosition(Vector2)"/>
+        public IShapeF WithPosition(Vector2 newPosition) => this with { Position = newPosition };
 
         /// <summary>
         ///     Computes the bounding <see cref="CircleF" /> from a minimum <see cref="Vector2" /> and maximum

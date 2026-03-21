@@ -321,6 +321,22 @@ namespace MonoGame.Extended
         }
 
         /// <summary>
+        /// Draw an ellipse.
+        /// </summary>
+        /// <param name="spriteBatch">The destination drawing surface</param>
+        /// <param name="center">Center of the ellipse</param>
+        /// <param name="radius">Radius of the ellipse</param>
+        /// <param name="angle">Angle of the ellipse in radians</param>
+        /// <param name="sides">The number of sides to generate.</param>
+        /// <param name="color">The color of the ellipse.</param>
+        /// <param name="thickness">The thickness of the line around the ellipse.</param>
+        /// <param name="layerDepth">The depth of the layer of this shape</param>
+        public static void DrawEllipse(this SpriteBatch spriteBatch, Vector2 center, Vector2 radius, float angle, int sides, Color color, float thickness = 1f, float layerDepth = 0)
+        {
+            DrawPolygon(spriteBatch, center, CreateEllipse(radius.X, radius.Y, angle, sides), color, thickness, layerDepth);
+        }
+
+        /// <summary>
         /// Draws an arc outline.
         /// </summary>
         /// <param name="spriteBatch">The destination drawing surface.</param>
@@ -409,6 +425,18 @@ namespace MonoGame.Extended
                 var y = (float)(ry * Math.Sin(t));
                 vertices[i] = new Vector2(x, y);
             }
+            return vertices;
+        }
+
+        private static Vector2[] CreateEllipse(float rx, float ry, float angle, int sides)
+        {
+            var vertices = CreateEllipse(rx, ry, sides);
+
+            for (var i = 0; i < sides; i++)
+            {
+                vertices[i] = Vector2.Transform(vertices[i], Matrix.CreateRotationZ(angle));
+            }
+
             return vertices;
         }
     }
