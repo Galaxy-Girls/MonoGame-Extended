@@ -44,7 +44,7 @@ namespace MonoGame.Extended.Input.InputListeners
         public ViewportAdapter ViewportAdapter { get; }
 
         public int DoubleClickMilliseconds { get; }
-        public int DragThreshold { get; }
+        public int DragThreshold { get; set; }
 
         /// <summary>
         ///     Returns true if the mouse has moved between the current and previous frames.
