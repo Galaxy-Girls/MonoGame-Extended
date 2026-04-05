@@ -58,7 +58,10 @@ namespace MonoGame.Extended.Content
             for (var i = 0; i < count; i++)
             {
                 var key = reader.ReadString();
-                var value = new TiledMapPropertyValue(reader.ReadString());
+                var value = new TiledMapPropertyValue(
+                    reader.ReadString(),
+                    reader.ReadString(),
+                    reader.ReadString());
                 ReadTiledMapProperties(reader, value.Properties);
                 properties[key] = value;
             }

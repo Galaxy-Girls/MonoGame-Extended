@@ -15,6 +15,12 @@ public class TiledMapPropertyContent
     [XmlAttribute(AttributeName = "value")]
     public string ValueAttribute { get; set; }
 
+    [XmlAttribute(AttributeName = "type")]
+    public string Type { get; set; }
+
+    [XmlAttribute(AttributeName = "propertytype")]
+    public string PropertyType { get; set; }
+
     [XmlText]
     public string ValueBody { get; set; }
 
