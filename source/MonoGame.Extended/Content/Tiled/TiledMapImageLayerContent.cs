@@ -19,9 +19,17 @@ public class TiledMapImageLayerContent : TiledMapLayerContent
     [XmlElement(ElementName = "image")]
     public TiledMapImageContent Image { get; set; }
 
+    [XmlAttribute(AttributeName = "repeatx")]
+    public bool RepeatX { get; set; }
+
+    [XmlAttribute(AttributeName = "repeaty")]
+    public bool RepeatY { get; set; }
+
     public TiledMapImageLayerContent()
         : base(TiledMapLayerType.ImageLayer)
     {
+        RepeatX = false;
+        RepeatY = false;
         Opacity = 1.0f;
         Visible = true;
         Properties = new List<TiledMapPropertyContent>();

@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content.Pipeline;
 using Microsoft.Xna.Framework.Content.Pipeline.Graphics;
 using Microsoft.Xna.Framework.Content.Pipeline.Serialization.Compiler;
+using MonoGame.Extended.Collisions.Layers;
 using MonoGame.Extended.Content.Tiled;
 using MonoGame.Extended.Tiled;
 
@@ -118,6 +119,8 @@ namespace MonoGame.Extended.Content.Pipeline.Tiled
             var externalReference = _contentItem.GetExternalReference<Texture2DContent>(imageLayer.Image.Source);
             writer.WriteExternalReference(externalReference);
             writer.Write(new Vector2(imageLayer.X, imageLayer.Y));
+            writer.Write(imageLayer.RepeatX);
+            writer.Write(imageLayer.RepeatY);
         }
 
         // ReSharper disable once SuggestBaseTypeForParameter

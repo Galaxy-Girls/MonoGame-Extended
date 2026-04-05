@@ -216,7 +216,9 @@ namespace MonoGame.Extended.Tiled
             var x = reader.ReadSingle();
             var y = reader.ReadSingle();
             var position = new Vector2(x, y);
-            return new TiledMapImageLayer(name, type, texture, position, offset, parallaxFactor, opacity, isVisible);
+            var repeatX = reader.ReadBoolean();
+            var repeatY = reader.ReadBoolean();
+            return new TiledMapImageLayer(name, type, texture, position, offset, parallaxFactor, repeatX, repeatY, opacity, isVisible);
         }
 
         private static TiledMapTileLayer ReadTileLayer(ContentReader reader, string name, string type, Vector2 offset, Vector2 parallaxFactor, float opacity, bool isVisible, TiledMap map)
